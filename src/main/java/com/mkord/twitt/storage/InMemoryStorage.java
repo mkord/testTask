@@ -6,16 +6,21 @@ import com.mkord.twitt.model.Message;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Component
 public class InMemoryStorage implements Storage {
 
-    private final Multimap<String, Message> messages = MultimapBuilder.hashKeys().treeSetValues().build();
+    private final Map<String, Set<Message>> messages = new ConcurrentHashMap<>();
 
-    private final Multimap<String, String> followers = MultimapBuilder.hashKeys().hashSetValues().build();
+    private final Map<String, Set<String>> followers = new ConcurrentHashMap<>();
 
     public void storeMessage(Message message) {
+        messages.putIfAbsent(message.getUser(), new HashSet<>());
         messages.get(message.getUser()).add(message);
     }
 
@@ -24,6 +29,7 @@ public class InMemoryStorage implements Storage {
     }
 
     public void follow(String userRequester, String userWillBeFollowed) {
+        followers.putIfAbsent(userRequester, new HashSet<>());
         followers.get(userRequester).add(userWillBeFollowed);
     }
 

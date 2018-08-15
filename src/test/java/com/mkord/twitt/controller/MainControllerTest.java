@@ -14,6 +14,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.web.util.NestedServletException;
+
+import javax.validation.ConstraintViolationException;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -62,6 +66,17 @@ public class MainControllerTest {
                 .getResponse();
 
         assertThat(response.getContentAsString()).isEqualTo("Message has been posted");
+    }
+
+    @Test(expected = NestedServletException.class)
+    public void testPostTooLongMessage() throws Exception {
+        StringBuilder sb = new StringBuilder();
+        IntStream.range(0, 15).forEach( i -> sb.append("0123456789"));
+
+        mvc.perform(get("/post?user=userTest&msg="+sb.toString())
+                .contentType(MediaType.TEXT_PLAIN))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("text/plain;charset=UTF-8"));
     }
 
     @Test

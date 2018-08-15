@@ -6,17 +6,25 @@ import com.mkord.twitt.event.NewMessageEvent;
 import com.mkord.twitt.model.Message;
 import com.mkord.twitt.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
 import java.util.Collection;
 
 @RestController
+@Validated
 public class MainController {
+
+    private static final int MESSAGE_MAX_SIZE = 140;
+
     private final AppEventBus appEventBus;
     private final MessageService messageService;
 
@@ -28,14 +36,17 @@ public class MainController {
 
     @RequestMapping("/")
     @ResponseBody String usage() {
-        return "Usage:\n<br> to post new message call: http://localhost:8080/post?user=<userName>&msg=<message>" +
-                "\n<br> to follow another user call: http://localhost:8080/follow?userRequester=<userName>&userToBeFollowed=<anotherUserName>" +
-                "\n<br> to show the wall call: http://localhost:8080/wall?user=<userName>" +
-                "\n<br> to show timeline call: http://localhost:8080/timeline?user=<userName>";
+        return "Usage:\n<br> to post new message call: http://localhost:{PORT}/post?user={userName}&msg={message}" +
+                "\n<br> to follow another user call: http://localhost:{PORT}/follow?userRequester={userName}&userToBeFollowed={anotherUserName}" +
+                "\n<br> to show the wall call: http://localhost:{PORT}/wall?user={userName}" +
+                "\n<br> to show timeline call: http://localhost:{PORT}/timeline?user={userName}";
     }
 
     @RequestMapping("post")
-    String post(@RequestParam String user, @RequestParam String msg) {
+    String post(@RequestParam String user,
+                @Size(max = MESSAGE_MAX_SIZE,
+                      message = "Message should not be more then "+MESSAGE_MAX_SIZE+" chars.")
+                @RequestParam String msg) {
         appEventBus.post(new NewMessageEvent(user, msg));
         return "Message has been posted";
     }

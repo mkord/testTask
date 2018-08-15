@@ -52,7 +52,7 @@ public class QueueBasedMessageService implements MessageService {
     @Override
     public Collection<Message> getMessagesForUser(String user) {
         checkNotNull(user);
-        return storage.getMessagesForUser(user);
+        return storage.getMessagesForUser(user).stream().sorted().collect(Collectors.toList());
     }
 
     @Override
